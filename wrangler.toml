@@ -5,5 +5,5 @@ pages_build_output_dir = ".vercel/output/static"
 
 [[kv_namespaces]]
 binding = "MATCHES_CACHE"
-id = "placeholder"
+id = "36556db281e34b148ede9a4572aab45a"
 
