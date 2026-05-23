@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+export const runtime = 'edge'
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -30,9 +32,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  const adminEmail = process.env.ADMIN_EMAIL ?? 'saul.trujillo@cognitiatech.com'
-  if (request.nextUrl.pathname.startsWith('/admin') && user?.email !== adminEmail) {
-    return NextResponse.redirect(new URL('/partidos', request.url))
+  if (request.nextUrl.pathname.startsWith('/admin')) {
+    const adminEmail = process.env.ADMIN_EMAIL ?? 'saul.trujillo@cognitiatech.com'
+    if (!user) return NextResponse.redirect(new URL('/login', request.url))
+    if (user.email !== adminEmail) return NextResponse.redirect(new URL('/partidos', request.url))
   }
 
   return supabaseResponse

@@ -7,5 +7,3 @@ pages_build_output_dir = ".vercel/output/static"
 binding = "MATCHES_CACHE"
 id = "placeholder"
 
-[vars]
-ADMIN_EMAIL = "saul.trujillo@cognitiatech.com"

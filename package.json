@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "vitest",
     "test:run": "vitest run",
-    "preview": "npx @cloudflare/next-on-pages && wrangler pages dev"
+    "preview": "npx @cloudflare/next-on-pages && wrangler pages dev",
+    "supabase:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/lib/types/database.types.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.5.0",
