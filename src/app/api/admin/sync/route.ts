@@ -32,19 +32,25 @@ export async function POST() {
   }
   const fixtures = data.response
 
-  for (const f of fixtures) {
-    await supabase.from('matches').upsert({
-      api_id: f.fixture.id,
-      home_team: f.teams.home.name,
-      away_team: f.teams.away.name,
-      kickoff_at: f.fixture.date,
-      stage: mapStage(f.league.round),
-      group_name: f.league.round.includes('Group') ? f.league.round.split(' ').pop() : null,
-      status: mapMatchStatus(f.fixture.status.short),
-      home_score: f.goals.home,
-      away_score: f.goals.away,
-    }, { onConflict: 'api_id' })
-  }
+  const records = fixtures.map((f: {
+    fixture: { id: number; date: string; status: { short: string } }
+    teams: { home: { name: string }; away: { name: string } }
+    league: { round: string }
+    goals: { home: number | null; away: number | null }
+  }) => ({
+    api_id: f.fixture.id,
+    home_team: f.teams.home.name,
+    away_team: f.teams.away.name,
+    kickoff_at: f.fixture.date,
+    stage: mapStage(f.league.round),
+    group_name: f.league.round.includes('Group') ? f.league.round.split(' ').pop() ?? null : null,
+    status: mapMatchStatus(f.fixture.status.short),
+    home_score: f.goals.home,
+    away_score: f.goals.away,
+  }))
+
+  const { error: upsertError } = await supabase.from('matches').upsert(records, { onConflict: 'api_id' })
+  if (upsertError) return NextResponse.json({ error: upsertError.message }, { status: 500 })
 
   return NextResponse.json({ synced: fixtures.length })
 }
@@ -59,7 +65,7 @@ function mapStage(round: string): string {
 }
 
 function mapMatchStatus(short: string): string {
-  if (['1H', '2H', 'HT', 'ET', 'P'].includes(short)) return 'live'
+  if (['1H', '2H', 'HT', 'ET', 'P', 'SUSP', 'INT'].includes(short)) return 'live'
   if (['FT', 'AET', 'PEN'].includes(short)) return 'finished'
   return 'scheduled'
 }

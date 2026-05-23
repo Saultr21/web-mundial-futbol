@@ -18,8 +18,9 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const res = await fetch(`${FOOTBALL_API}/fixtures?id=${id}`, {
     headers: { 'x-apisports-key': apiKey },
   })
-  const data = await res.json() as { response?: Array<{ fixture: { status: { short: string } } }> }
-  const fixture = data.response?.[0]
+  if (!res.ok) return NextResponse.json({ error: `API-Football error: ${res.status}` }, { status: 502 })
+  const data = await res.json() as { response?: unknown[] }
+  const fixture = (data.response?.[0]) as { fixture: { status: { short: string } } } | undefined
   if (!fixture) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const isLive = ['1H', '2H', 'HT'].includes(fixture.fixture.status.short)
