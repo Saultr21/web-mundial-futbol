@@ -1,0 +1,11 @@
+name = "mundial-predicciones"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+[[kv_namespaces]]
+binding = "MATCHES_CACHE"
+id = "placeholder"
+
+[vars]
+ADMIN_EMAIL = "saul.trujillo@cognitiatech.com"
