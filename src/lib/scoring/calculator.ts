@@ -71,7 +71,7 @@ export function calculateBracketPoints(bracket: BracketResult, results: BracketR
   if (bracket.champion === results.champion) points += 50
   if (bracket.runner_up === results.runner_up) points += 25
   if (bracket.third === results.third) points += 25
-  if (bracket.fourth === results.fourth) points += 20
+  if (bracket.fourth === results.fourth) points += 10
 
   for (const team of bracket.semifinalists) {
     if (results.semifinalists.includes(team)) points += 10

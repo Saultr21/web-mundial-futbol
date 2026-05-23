@@ -89,8 +89,8 @@ describe('calculateBracketPoints', () => {
       quarterfinalists: ['Inglaterra', 'Italia', 'Países Bajos', 'Marruecos'],
     }
     const pts = calculateBracketPoints(bracket, results)
-    // 50 + 25 + 25 + 10 + 10 + 10 + 5*4 + 30 bonus = 190
-    expect(pts).toBe(190)
+    // 50 + 25 + 25 + 10 + 10 + 10 + 5*4 + 30 bonus = 180
+    expect(pts).toBe(180)
   })
 
   it('solo acierta campeón', () => {
