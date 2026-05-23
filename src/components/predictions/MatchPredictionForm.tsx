@@ -1,5 +1,5 @@
 'use client'
-import { useState, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -24,7 +24,6 @@ interface Props {
 export function MatchPredictionForm({ match, existing, userId }: Props) {
   const supabase = createClient()
   const deadline = new Date(match.kickoff_at).getTime() - 5 * 60 * 1000
-  const isLocked = useMemo(() => Date.now() >= deadline || match.status !== 'scheduled', [deadline, match.status])
 
   const [predHome, setPredHome] = useState(existing?.pred_home ?? 0)
   const [predAway, setPredAway] = useState(existing?.pred_away ?? 0)
@@ -34,6 +33,11 @@ export function MatchPredictionForm({ match, existing, userId }: Props) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [isLocked, setIsLocked] = useState(Date.now() >= deadline || match.status !== 'scheduled')
+
+  useEffect(() => {
+    setIsLocked(Date.now() >= deadline || match.status !== 'scheduled')
+  }, [deadline, match.status])
 
   async function submit(e: React.FormEvent) {
     e.preventDefault()
