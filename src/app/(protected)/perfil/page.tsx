@@ -25,6 +25,7 @@ export default function PerfilPage() {
       if (data) { setDisplayName(data.display_name); setAvatarUrl(data.avatar_url) }
     }
     load()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function uploadAvatar(e: React.ChangeEvent<HTMLInputElement>) {
