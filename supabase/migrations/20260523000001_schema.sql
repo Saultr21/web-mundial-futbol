@@ -104,3 +104,6 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure handle_new_user();
+
+-- Índice para consultas por partido (scoring job)
+create index on predictions (match_id);

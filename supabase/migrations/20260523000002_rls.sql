@@ -17,7 +17,8 @@ create policy "matches_select" on matches for select to authenticated using (tru
 -- predictions: lectura global autenticada, escritura solo del propio usuario
 create policy "predictions_select" on predictions for select to authenticated using (true);
 create policy "predictions_insert" on predictions for insert to authenticated with check (auth.uid() = user_id);
-create policy "predictions_update" on predictions for update to authenticated using (auth.uid() = user_id);
+create policy "predictions_update" on predictions for update to authenticated
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- brackets y special_predictions: ídem
 create policy "brackets_select" on brackets for select to authenticated using (true);
@@ -34,11 +35,16 @@ create policy "special_update" on special_predictions for update to authenticate
 create policy "leaderboard_select" on leaderboard for select to authenticated using (true);
 create policy "achievements_select" on achievements for select to authenticated using (true);
 
+-- Escritura de leaderboard y achievements solo para service_role (Edge Functions)
+create policy "leaderboard_insert" on leaderboard for insert to service_role with check (true);
+create policy "leaderboard_update" on leaderboard for update to service_role using (true);
+create policy "achievements_insert" on achievements for insert to service_role with check (true);
+
 -- Storage bucket para avatares
 insert into storage.buckets (id, name, public) values ('avatars', 'avatars', true);
 
 create policy "avatars_select" on storage.objects for select using (bucket_id = 'avatars');
 create policy "avatars_insert" on storage.objects for insert to authenticated
-  with check (bucket_id = 'avatars' and name = auth.uid()::text);
+  with check (bucket_id = 'avatars' and name like auth.uid()::text || '/%');
 create policy "avatars_update" on storage.objects for update to authenticated
-  using (bucket_id = 'avatars' and name = auth.uid()::text);
+  using (bucket_id = 'avatars' and name like auth.uid()::text || '/%');

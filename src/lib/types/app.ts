@@ -42,6 +42,37 @@ export interface LeaderboardEntry {
   }
 }
 
+export interface Bracket {
+  id: string
+  user_id: string
+  champion: string
+  runner_up: string
+  third: string
+  fourth: string
+  semifinalists: string[]
+  quarterfinalists: string[]
+  locked_at: string | null
+  points_earned: number
+}
+
+export interface SpecialPrediction {
+  id: string
+  user_id: string
+  top_scorer: string
+  most_yellows: string
+  golden_glove: string
+  golden_ball: string
+  locked_at: string | null
+  points_earned: number
+}
+
+export interface Achievement {
+  id: string
+  user_id: string
+  badge_key: BadgeKey
+  unlocked_at: string
+}
+
 export const BADGE_KEYS = [
   'profeta', 'madrugador', 'underdog', 'hat_trick',
   'vidente_cuadro', 'constante', 'goleador', 'campeon'
