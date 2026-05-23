@@ -1,6 +1,6 @@
 import type { BadgeKey } from '@/lib/types/app'
 
-interface AchievementStats {
+export interface AchievementStats {
   exact_scores: number
   early_predictions: number
   consecutive_exact: number
@@ -10,7 +10,7 @@ interface AchievementStats {
   bracket_accuracy: number
 }
 
-export function evaluateAchievements(stats: AchievementStats, alreadyUnlocked: string[]): BadgeKey[] {
+export function evaluateAchievements(stats: AchievementStats, alreadyUnlocked: BadgeKey[]): BadgeKey[] {
   const newBadges: BadgeKey[] = []
 
   function check(key: BadgeKey, condition: boolean) {

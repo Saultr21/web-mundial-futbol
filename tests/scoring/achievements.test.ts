@@ -1,17 +1,18 @@
 import { describe, it, expect } from 'vitest'
 import { evaluateAchievements } from '@/lib/scoring/achievements'
+import type { BadgeKey } from '@/lib/types/app'
 
 describe('evaluateAchievements', () => {
   it('desbloquea profeta con 5 marcadores exactos', () => {
     const stats = { exact_scores: 5, early_predictions: 0, consecutive_exact: 0, total_scorers_correct: 0, all_group_predicted: false, champion_correct: false, bracket_accuracy: 0 }
-    const unlocked = ['constante']
+    const unlocked: BadgeKey[] = ['constante']
     const result = evaluateAchievements(stats, unlocked)
     expect(result).toContain('profeta')
   })
 
   it('no desbloquea profeta si ya está desbloqueado', () => {
     const stats = { exact_scores: 5, early_predictions: 0, consecutive_exact: 0, total_scorers_correct: 0, all_group_predicted: false, champion_correct: false, bracket_accuracy: 0 }
-    const unlocked = ['profeta']
+    const unlocked: BadgeKey[] = ['profeta']
     const result = evaluateAchievements(stats, unlocked)
     expect(result).not.toContain('profeta')
   })
