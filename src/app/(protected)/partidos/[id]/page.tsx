@@ -8,11 +8,13 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const matchRes = await supabase.from('matches').select('*').eq('id', id).single()
-  const predRes = await supabase.from('predictions').select('*').eq('match_id', id).eq('user_id', user!.id).maybeSingle()
+  const [{ data: matchData }, { data: predictionData }] = await Promise.all([
+    supabase.from('matches').select('*').eq('id', id).single(),
+    supabase.from('predictions').select('*').eq('match_id', id).eq('user_id', user!.id).maybeSingle(),
+  ])
 
-  const match = matchRes.data as Match | null
-  const prediction = predRes.data as Prediction | null
+  const match = matchData as Match | null
+  const prediction = predictionData as Prediction | null
 
   if (!match) notFound()
 
