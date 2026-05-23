@@ -9,7 +9,7 @@ export default function LoginPage() {
   async function loginWithGoogle() {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/partidos` },
+      options: { redirectTo: `${window.location.origin}/auth/callback?next=/partidos` },
     })
   }
 

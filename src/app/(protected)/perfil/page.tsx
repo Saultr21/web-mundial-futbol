@@ -17,18 +17,14 @@ export default function PerfilPage() {
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       setUserId(user.id)
-      supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single<Profile>()
-        .then(({ data }) => {
-          if (data) { setDisplayName(data.display_name); setAvatarUrl(data.avatar_url) }
-        })
-    })
+      const { data } = await supabase.from('profiles').select('*').eq('id', user.id).single<Profile>()
+      if (data) { setDisplayName(data.display_name); setAvatarUrl(data.avatar_url) }
+    }
+    load()
   }, [])
 
   async function uploadAvatar(e: React.ChangeEvent<HTMLInputElement>) {
@@ -46,8 +42,9 @@ export default function PerfilPage() {
   async function save() {
     setSaving(true)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (supabase.from('profiles') as any).update({ display_name: displayName }).eq('id', userId)
+    const { error } = await (supabase.from('profiles') as any).update({ display_name: displayName }).eq('id', userId)
     setSaving(false)
+    if (error) { alert('Error guardando: ' + error.message); return }
     alert('Guardado')
   }
 
