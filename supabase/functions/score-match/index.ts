@@ -37,7 +37,13 @@ function calcPoints(match: Match, pred: Prediction): number {
     pts += 3 * mult
   }
 
-  const remaining = [...match.home_scorers, ...match.away_scorers]
+  const homeGoalsCorrect = pred.pred_home === match.home_score
+  const awayGoalsCorrect = pred.pred_away === match.away_score
+  const eligibleScorers = [
+    ...(homeGoalsCorrect ? match.home_scorers : []),
+    ...(awayGoalsCorrect ? match.away_scorers : []),
+  ]
+  const remaining = [...eligibleScorers]
   for (const s of pred.pred_scorers) {
     const i = remaining.findIndex(r => r.toLowerCase() === s.toLowerCase())
     if (i !== -1) { pts += 2 * mult; remaining.splice(i, 1) }
@@ -51,7 +57,17 @@ function calcPoints(match: Match, pred: Prediction): number {
 }
 
 serve(async (req) => {
-  const { match_id } = await req.json() as { match_id: string }
+  let match_id: string
+  try {
+    const body = await req.json() as { match_id?: string }
+    if (!body.match_id) throw new Error('missing match_id')
+    match_id = body.match_id
+  } catch {
+    return new Response(JSON.stringify({ error: 'Invalid request body' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' }
+    })
+  }
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -88,11 +104,15 @@ serve(async (req) => {
 
     if (updateError) continue
 
-    await supabase.rpc('add_points', {
+    const { error: rpcError } = await supabase.rpc('add_points', {
       p_user_id: pred.user_id,
       p_points: pts,
       p_week_points: pts,
     })
+    if (rpcError) {
+      console.error('add_points failed for user', pred.user_id, rpcError.message)
+      continue
+    }
 
     scored++
   }
