@@ -3,6 +3,7 @@ export const runtime = 'edge'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import { LogoutButton } from '@/components/layout/LogoutButton'
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -16,8 +17,9 @@ export default async function ProtectedLayout({ children }: { children: React.Re
         <Link href="/cuadro" className="text-sm text-muted-foreground hover:text-foreground">Cuadro</Link>
         <Link href="/ranking" className="text-sm text-muted-foreground hover:text-foreground">Ranking</Link>
         <Link href="/logros" className="text-sm text-muted-foreground hover:text-foreground">Logros</Link>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-3">
           <Link href="/perfil" className="text-sm">{user.email ?? 'Perfil'}</Link>
+          <LogoutButton />
         </div>
       </nav>
       <main className="container mx-auto px-4 py-6">{children}</main>
