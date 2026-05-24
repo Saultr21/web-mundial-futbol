@@ -43,6 +43,14 @@ export async function POST() {
 
   const fixtures = data.response ?? []
 
+  // Diagnóstico: si 0 resultados, devolver info de la respuesta
+  if (fixtures.length === 0) {
+    return NextResponse.json({
+      synced: 0,
+      debug: { results: (data as Record<string, unknown>).results ?? 0, errors: data.errors ?? {} },
+    })
+  }
+
   const records = fixtures.map((f: {
     fixture: { id: number; date: string; status: { short: string } }
     teams: { home: { name: string }; away: { name: string } }
