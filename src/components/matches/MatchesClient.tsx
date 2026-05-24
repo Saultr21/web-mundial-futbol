@@ -5,6 +5,10 @@ import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 import type { Match, Stage, MatchStatus } from '@/lib/types/app'
 import { getFlagUrl, getTeamInitials } from '@/lib/utils/flags'
+import { GroupsView } from './GroupsView'
+import { BracketView } from './BracketView'
+
+type ViewMode = 'list' | 'groups' | 'bracket'
 
 interface Props {
   matches: Match[]
@@ -99,6 +103,7 @@ function StatusBadge({ status, kickoffAt }: { status: MatchStatus; kickoffAt: st
 }
 
 export function MatchesClient({ matches }: Props) {
+  const [view, setView] = useState<ViewMode>('list')
   const [search, setSearch] = useState('')
   const [stageFilter, setStageFilter] = useState<Stage | 'all'>('all')
   const [statusFilter, setStatusFilter] = useState<MatchStatus | 'all'>('all')
@@ -136,142 +141,183 @@ export function MatchesClient({ matches }: Props) {
     outline: 'none',
   } as React.CSSProperties
 
+  const VIEW_TABS: { id: ViewMode; label: string; icon: string }[] = [
+    { id: 'list', label: 'Lista', icon: '☰' },
+    { id: 'groups', label: 'Grupos', icon: '⊞' },
+    { id: 'bracket', label: 'Cuadro', icon: '⟁' },
+  ]
+
   return (
-    <div className="space-y-6">
-      {/* Barra de filtros */}
-      <div className="flex flex-wrap gap-3">
-        <input
-          type="search"
-          placeholder="Buscar equipo..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[180px] rounded-lg px-3 py-2 text-sm transition-colors duration-150"
-          style={{
-            background: 'oklch(0.11 0.008 255)',
-            border: '1px solid oklch(0.20 0.01 255)',
-            color: 'oklch(0.93 0.005 255)',
-            outline: 'none',
-          }}
-          onFocus={(e) => { e.currentTarget.style.borderColor = 'oklch(0.72 0.22 145)' }}
-          onBlur={(e) => { e.currentTarget.style.borderColor = 'oklch(0.20 0.01 255)' }}
-        />
-        <select
-          value={stageFilter}
-          onChange={(e) => setStageFilter(e.target.value as Stage | 'all')}
-          style={selectStyle}
-          onFocus={(e) => { e.currentTarget.style.borderColor = 'oklch(0.72 0.22 145)' }}
-          onBlur={(e) => { e.currentTarget.style.borderColor = 'oklch(0.20 0.01 255)' }}
+    <div className="space-y-5">
+      {/* View toggle + filters row */}
+      <div className="flex flex-wrap items-center gap-3">
+        {/* View mode tabs */}
+        <div
+          className="flex items-center rounded-lg p-0.5 shrink-0"
+          style={{ background: 'oklch(0.09 0.007 255)', border: '1px solid oklch(0.16 0.01 255)' }}
         >
-          {(Object.entries(STAGE_LABELS) as [Stage | 'all', string][]).map(([val, label]) => (
-            <option key={val} value={val}>{label}</option>
+          {VIEW_TABS.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setView(tab.id)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer"
+              style={{
+                background: view === tab.id ? 'oklch(0.72 0.22 145)' : 'transparent',
+                color: view === tab.id ? 'oklch(0.07 0.006 255)' : 'oklch(0.52 0.01 255)',
+                fontWeight: view === tab.id ? 700 : 400,
+              }}
+            >
+              <span aria-hidden="true" style={{ fontSize: 11 }}>{tab.icon}</span>
+              {tab.label}
+            </button>
           ))}
-        </select>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as MatchStatus | 'all')}
-          style={selectStyle}
-          onFocus={(e) => { e.currentTarget.style.borderColor = 'oklch(0.72 0.22 145)' }}
-          onBlur={(e) => { e.currentTarget.style.borderColor = 'oklch(0.20 0.01 255)' }}
-        >
-          {(Object.entries(STATUS_LABELS) as [MatchStatus | 'all', string][]).map(([val, label]) => (
-            <option key={val} value={val}>{label}</option>
-          ))}
-        </select>
+        </div>
+
+        {/* Filters — only shown in list view */}
+        {view === 'list' && (
+          <>
+            <input
+              type="search"
+              placeholder="Buscar equipo..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 min-w-[160px] rounded-lg px-3 py-2 text-sm transition-colors duration-150"
+              style={{
+                background: 'oklch(0.11 0.008 255)',
+                border: '1px solid oklch(0.20 0.01 255)',
+                color: 'oklch(0.93 0.005 255)',
+                outline: 'none',
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'oklch(0.72 0.22 145)' }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = 'oklch(0.20 0.01 255)' }}
+            />
+            <select
+              value={stageFilter}
+              onChange={(e) => setStageFilter(e.target.value as Stage | 'all')}
+              style={selectStyle}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'oklch(0.72 0.22 145)' }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = 'oklch(0.20 0.01 255)' }}
+            >
+              {(Object.entries(STAGE_LABELS) as [Stage | 'all', string][]).map(([val, label]) => (
+                <option key={val} value={val}>{label}</option>
+              ))}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as MatchStatus | 'all')}
+              style={selectStyle}
+              onFocus={(e) => { e.currentTarget.style.borderColor = 'oklch(0.72 0.22 145)' }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = 'oklch(0.20 0.01 255)' }}
+            >
+              {(Object.entries(STATUS_LABELS) as [MatchStatus | 'all', string][]).map(([val, label]) => (
+                <option key={val} value={val}>{label}</option>
+              ))}
+            </select>
+          </>
+        )}
       </div>
 
-      {/* Resultados */}
-      {filtered.length === 0 ? (
-        <div
-          className="text-center py-16 text-sm"
-          style={{ color: 'oklch(0.52 0.01 255)' }}
-        >
-          No se encontraron partidos
-        </div>
-      ) : (
-        Object.entries(grouped).map(([day, dayMatches]) => (
-          <div key={day}>
-            <h2
-              className="text-xs font-medium uppercase tracking-widest mb-3 capitalize"
+      {/* Views */}
+      {view === 'groups' && <GroupsView matches={matches} />}
+      {view === 'bracket' && <BracketView matches={matches} />}
+
+      {view === 'list' && (
+        <>
+          {/* Resultados */}
+          {filtered.length === 0 ? (
+            <div
+              className="text-center py-16 text-sm"
               style={{ color: 'oklch(0.52 0.01 255)' }}
             >
-              {day}
-            </h2>
-            <div className="grid gap-2">
-              {dayMatches.map((m) => (
-                <Link
-                  key={m.id}
-                  href={`/partidos/${m.id}`}
-                  className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200"
-                  style={{
-                    background: 'oklch(0.11 0.008 255)',
-                    border: '1px solid oklch(0.20 0.01 255)',
-                    textDecoration: 'none',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'oklch(0.72 0.22 145 / 0.5)'
-                    e.currentTarget.style.background = 'oklch(0.13 0.01 255)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'oklch(0.20 0.01 255)'
-                    e.currentTarget.style.background = 'oklch(0.11 0.008 255)'
-                  }}
-                >
-                  {/* Equipo local */}
-                  <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <TeamFlag team={m.home_team} />
-                    <span
-                      className="font-semibold text-sm truncate"
-                      style={{ color: 'oklch(0.93 0.005 255)' }}
-                    >
-                      {m.home_team}
-                    </span>
-                  </div>
-
-                  {/* Marcador / hora central */}
-                  <div className="flex flex-col items-center gap-1 shrink-0 min-w-[80px]">
-                    {m.status === 'finished' ? (
-                      <span
-                        className="text-base font-bold font-mono tracking-wider"
-                        style={{ color: 'oklch(0.93 0.005 255)' }}
-                      >
-                        {m.home_score} – {m.away_score}
-                      </span>
-                    ) : (
-                      <StatusBadge status={m.status} kickoffAt={m.kickoff_at} />
-                    )}
-                    {/* Fase / grupo */}
-                    <span
-                      className="text-[10px] uppercase tracking-widest"
-                      style={{ color: 'oklch(0.40 0.008 255)' }}
-                    >
-                      {m.group_name ?? STAGE_LABELS[m.stage]}
-                    </span>
-                  </div>
-
-                  {/* Equipo visitante */}
-                  <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
-                    <span
-                      className="font-semibold text-sm truncate text-right"
-                      style={{ color: 'oklch(0.93 0.005 255)' }}
-                    >
-                      {m.away_team}
-                    </span>
-                    <TeamFlag team={m.away_team} />
-                  </div>
-
-                  {/* Flecha */}
-                  <span
-                    className="text-sm shrink-0 transition-transform duration-200 group-hover:translate-x-0.5"
-                    style={{ color: 'oklch(0.40 0.008 255)' }}
-                    aria-hidden="true"
-                  >
-                    →
-                  </span>
-                </Link>
-              ))}
+              No se encontraron partidos
             </div>
-          </div>
-        ))
+          ) : (
+            Object.entries(grouped).map(([day, dayMatches]) => (
+              <div key={day}>
+                <h2
+                  className="text-xs font-medium uppercase tracking-widest mb-3 capitalize"
+                  style={{ color: 'oklch(0.52 0.01 255)' }}
+                >
+                  {day}
+                </h2>
+                <div className="grid gap-2">
+                  {dayMatches.map((m) => (
+                    <Link
+                      key={m.id}
+                      href={`/partidos/${m.id}`}
+                      className="group flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200"
+                      style={{
+                        background: 'oklch(0.11 0.008 255)',
+                        border: '1px solid oklch(0.20 0.01 255)',
+                        textDecoration: 'none',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = 'oklch(0.72 0.22 145 / 0.5)'
+                        e.currentTarget.style.background = 'oklch(0.13 0.01 255)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = 'oklch(0.20 0.01 255)'
+                        e.currentTarget.style.background = 'oklch(0.11 0.008 255)'
+                      }}
+                    >
+                      {/* Equipo local */}
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <TeamFlag team={m.home_team} />
+                        <span
+                          className="font-semibold text-sm truncate"
+                          style={{ color: 'oklch(0.93 0.005 255)' }}
+                        >
+                          {m.home_team}
+                        </span>
+                      </div>
+
+                      {/* Marcador / hora central */}
+                      <div className="flex flex-col items-center gap-1 shrink-0 min-w-[80px]">
+                        {m.status === 'finished' ? (
+                          <span
+                            className="text-base font-bold font-mono tracking-wider"
+                            style={{ color: 'oklch(0.93 0.005 255)' }}
+                          >
+                            {m.home_score} – {m.away_score}
+                          </span>
+                        ) : (
+                          <StatusBadge status={m.status} kickoffAt={m.kickoff_at} />
+                        )}
+                        {/* Fase / grupo */}
+                        <span
+                          className="text-[10px] uppercase tracking-widest"
+                          style={{ color: 'oklch(0.40 0.008 255)' }}
+                        >
+                          {m.group_name ?? STAGE_LABELS[m.stage]}
+                        </span>
+                      </div>
+
+                      {/* Equipo visitante */}
+                      <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+                        <span
+                          className="font-semibold text-sm truncate text-right"
+                          style={{ color: 'oklch(0.93 0.005 255)' }}
+                        >
+                          {m.away_team}
+                        </span>
+                        <TeamFlag team={m.away_team} />
+                      </div>
+
+                      {/* Flecha */}
+                      <span
+                        className="text-sm shrink-0 transition-transform duration-200 group-hover:translate-x-0.5"
+                        style={{ color: 'oklch(0.40 0.008 255)' }}
+                        aria-hidden="true"
+                      >
+                        →
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
+        </>
       )}
     </div>
   )
