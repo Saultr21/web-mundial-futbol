@@ -17,8 +17,13 @@ export default function AdminPage() {
       method: 'POST',
       headers: { 'x-admin-email': user?.email ?? '' },
     })
-    const data = await res.json() as { synced?: number; error?: string }
-    setResult(res.ok ? `✅ ${data.synced} partidos sincronizados` : `❌ Error: ${data.error}`)
+    const data = await res.json() as { synced?: number; error?: string; details?: Record<string, string> }
+    if (res.ok) {
+      setResult(`✅ ${data.synced} partidos sincronizados`)
+    } else {
+      const detail = data.details ? JSON.stringify(data.details) : data.error
+      setResult(`❌ Error: ${detail}`)
+    }
     setSyncing(false)
   }
 

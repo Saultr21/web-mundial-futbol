@@ -19,10 +19,16 @@ export async function POST() {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
+  if (!process.env.FOOTBALL_API_KEY) {
+    return NextResponse.json({ error: 'FOOTBALL_API_KEY no configurada' }, { status: 500 })
+  }
+
   const res = await fetch(`${FOOTBALL_API}/fixtures?league=1&season=2026`, {
-    headers: { 'x-apisports-key': process.env.FOOTBALL_API_KEY! },
+    headers: { 'x-apisports-key': process.env.FOOTBALL_API_KEY },
   })
   const data = await res.json() as {
+    errors?: Record<string, string>
+    results?: number
     response: Array<{
       fixture: { id: number; date: string; status: { short: string } }
       teams: { home: { name: string }; away: { name: string } }
@@ -30,7 +36,12 @@ export async function POST() {
       goals: { home: number | null; away: number | null }
     }>
   }
-  const fixtures = data.response
+
+  if (data.errors && Object.keys(data.errors).length > 0) {
+    return NextResponse.json({ error: 'API-Football error', details: data.errors }, { status: 502 })
+  }
+
+  const fixtures = data.response ?? []
 
   const records = fixtures.map((f: {
     fixture: { id: number; date: string; status: { short: string } }
