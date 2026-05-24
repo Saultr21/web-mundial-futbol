@@ -12,6 +12,7 @@ type ViewMode = 'list' | 'groups' | 'bracket'
 
 interface Props {
   matches: Match[]
+  predictedMatchIds: Set<string>
 }
 
 const STAGE_LABELS: Record<Stage | 'all', string> = {
@@ -103,8 +104,42 @@ function StatusBadge({ status, kickoffAt }: { status: MatchStatus; kickoffAt: st
   )
 }
 
-export function MatchesClient({ matches }: Props) {
-  const [view, setView] = useState<ViewMode>('list')
+// Indicador de si el usuario ya tiene predicción en este partido
+function PredictionDot({ predicted, locked }: { predicted: boolean; locked: boolean }) {
+  if (locked) {
+    // Partido bloqueado: mostrar si predijo o no
+    return (
+      <span
+        title={predicted ? 'Predicción enviada' : 'Sin predicción'}
+        className="inline-flex items-center justify-center rounded-full text-[9px] font-bold w-4 h-4 shrink-0"
+        style={{
+          background: predicted ? 'oklch(0.72 0.22 145 / 0.15)' : 'oklch(0.65 0.22 25 / 0.12)',
+          color: predicted ? 'oklch(0.72 0.22 145)' : 'oklch(0.65 0.22 25)',
+          border: `1px solid ${predicted ? 'oklch(0.72 0.22 145 / 0.3)' : 'oklch(0.65 0.22 25 / 0.25)'}`,
+        }}
+      >
+        {predicted ? '✓' : '✗'}
+      </span>
+    )
+  }
+  // Partido abierto: verde si predijo, gris con ? si no
+  return (
+    <span
+      title={predicted ? 'Predicción enviada' : 'Pendiente de predicción'}
+      className="inline-flex items-center justify-center rounded-full shrink-0"
+      style={{
+        width: 8,
+        height: 8,
+        background: predicted ? 'oklch(0.72 0.22 145)' : 'oklch(0.28 0.01 255)',
+        boxShadow: predicted ? '0 0 4px oklch(0.72 0.22 145 / 0.5)' : 'none',
+      }}
+    />
+  )
+}
+
+
+export function MatchesClient({ matches, predictedMatchIds }: Props) {
+  const [view, setView] = useState<ViewMode>('groups')
   const [search, setSearch] = useState('')
   const [stageFilter, setStageFilter] = useState<Stage | 'all'>('all')
   const [statusFilter, setStatusFilter] = useState<MatchStatus | 'all'>('all')
@@ -219,7 +254,7 @@ export function MatchesClient({ matches }: Props) {
       </div>
 
       {/* Views */}
-      {view === 'groups' && <GroupsView matches={matches} />}
+      {view === 'groups' && <GroupsView matches={matches} predictedMatchIds={predictedMatchIds} />}
       {view === 'bracket' && <BracketView matches={matches} />}
 
       {view === 'list' && (
@@ -304,14 +339,17 @@ export function MatchesClient({ matches }: Props) {
                         <TeamFlag team={m.away_team} />
                       </div>
 
-                      {/* Flecha */}
-                      <span
-                        className="text-sm shrink-0 transition-transform duration-200 group-hover:translate-x-0.5"
-                        style={{ color: 'oklch(0.40 0.008 255)' }}
-                        aria-hidden="true"
-                      >
-                        →
-                      </span>
+                      {/* Indicador predicción + flecha */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        <PredictionDot predicted={predictedMatchIds.has(m.id)} locked={m.status !== 'scheduled'} />
+                        <span
+                          className="text-sm transition-transform duration-200 group-hover:translate-x-0.5"
+                          style={{ color: 'oklch(0.40 0.008 255)' }}
+                          aria-hidden="true"
+                        >
+                          →
+                        </span>
+                      </div>
                     </Link>
                   ))}
                 </div>

@@ -8,12 +8,21 @@ export const revalidate = 60
 
 export default async function PartidosPage() {
   const supabase = await createClient()
-  const { data: matches } = await supabase
-    .from('matches')
-    .select('*')
-    .order('kickoff_at', { ascending: true })
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const [{ data: matches }, { data: predictions }] = await Promise.all([
+    supabase
+      .from('matches')
+      .select('*')
+      .order('kickoff_at', { ascending: true }),
+    supabase
+      .from('predictions')
+      .select('match_id')
+      .eq('user_id', user!.id),
+  ])
 
   const allMatches = (matches ?? []) as unknown as Match[]
+  const predictedMatchIds = new Set((predictions ?? []).map(p => p.match_id as string))
 
   return (
     <div className="space-y-6">
@@ -28,14 +37,11 @@ export default async function PartidosPage() {
         >
           Partidos
         </h1>
-        <span
-          className="text-sm"
-          style={{ color: 'oklch(0.52 0.01 255)' }}
-        >
+        <span className="text-sm" style={{ color: 'oklch(0.52 0.01 255)' }}>
           {allMatches.length} encuentros
         </span>
       </div>
-      <MatchesClient matches={allMatches} />
+      <MatchesClient matches={allMatches} predictedMatchIds={predictedMatchIds} />
     </div>
   )
 }
