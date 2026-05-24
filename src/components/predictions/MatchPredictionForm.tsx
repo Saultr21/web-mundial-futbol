@@ -204,12 +204,11 @@ function PlayerPicker({
         </div>
       )}
 
-      {/* Team player quick-chips (when players available and list short enough) */}
-      {hasPlayers && !focused && players.length <= 30 && (
+      {/* Team player quick-chips */}
+      {hasPlayers && !focused && (
         <div className="flex flex-wrap gap-1 mt-1">
           {players
             .filter(p => !selected.includes(p))
-            .slice(0, 16)
             .map(name => (
               <button
                 key={name}
