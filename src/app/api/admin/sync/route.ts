@@ -72,9 +72,11 @@ export async function POST() {
 
 function mapStage(stage: string): string {
   if (stage === 'GROUP_STAGE') return 'group'
+  if (stage === 'ROUND_OF_32') return 'r32'
   if (stage === 'ROUND_OF_16' || stage === 'LAST_16') return 'r16'
   if (stage === 'QUARTER_FINALS') return 'qf'
   if (stage === 'SEMI_FINALS') return 'sf'
+  // THIRD_PLACE y FINAL ambos van a 'final'; el BracketView los separa por kickoff_at
   if (stage === 'FINAL' || stage === 'THIRD_PLACE') return 'final'
   return 'group'
 }

@@ -17,6 +17,7 @@ interface Props {
 const STAGE_LABELS: Record<Stage | 'all', string> = {
   all: 'Todos',
   group: 'Fase de grupos',
+  r32: 'Ronda de 32',
   r16: 'Octavos',
   qf: 'Cuartos',
   sf: 'Semifinal',

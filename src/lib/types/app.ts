@@ -1,4 +1,4 @@
-export type Stage = 'group' | 'r16' | 'qf' | 'sf' | 'final'
+export type Stage = 'group' | 'r32' | 'r16' | 'qf' | 'sf' | 'final'
 export type MatchStatus = 'scheduled' | 'live' | 'finished'
 
 export interface Match {
