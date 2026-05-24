@@ -15,9 +15,22 @@ export function LogoutButton() {
   return (
     <button
       onClick={logout}
-      className="text-sm text-muted-foreground hover:text-foreground"
+      className="text-xs font-medium px-3 py-1.5 rounded-md transition-colors duration-150 cursor-pointer"
+      style={{
+        color: 'oklch(0.52 0.01 255)',
+        border: '1px solid oklch(0.20 0.01 255)',
+        background: 'transparent',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.color = 'oklch(0.93 0.005 255)'
+        e.currentTarget.style.borderColor = 'oklch(0.72 0.22 145)'
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.color = 'oklch(0.52 0.01 255)'
+        e.currentTarget.style.borderColor = 'oklch(0.20 0.01 255)'
+      }}
     >
-      Cerrar sesión
+      Salir
     </button>
   )
 }
