@@ -16,6 +16,8 @@ export interface Match {
   away_scorers: string[]
   red_card: boolean
   most_fouls_player: string | null
+  home_players: string[]
+  away_players: string[]
 }
 
 export interface Prediction {

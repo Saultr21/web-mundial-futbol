@@ -7,7 +7,8 @@ const baseMatch: Match = {
   kickoff_at: '2026-06-14T18:00:00Z', stage: 'group', group_name: 'A',
   status: 'finished', home_score: 2, away_score: 1,
   home_scorers: ['Morata', 'Yamal'], away_scorers: ['Mbappe'],
-  red_card: false, most_fouls_player: 'Tchouameni'
+  red_card: false, most_fouls_player: 'Tchouameni',
+  home_players: [], away_players: []
 }
 
 const basePrediction: Prediction = {

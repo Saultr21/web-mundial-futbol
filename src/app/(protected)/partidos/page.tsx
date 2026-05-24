@@ -13,7 +13,7 @@ export default async function PartidosPage() {
     .select('*')
     .order('kickoff_at', { ascending: true })
 
-  const allMatches = (matches ?? []) as Match[]
+  const allMatches = (matches ?? []) as unknown as Match[]
 
   return (
     <div className="space-y-6">
