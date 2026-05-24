@@ -232,110 +232,278 @@ function PlayerPicker({
   )
 }
 
-// ── Vista de predicción bloqueada (solo lectura) ───────────────────────────
+// ── Vista de predicción sellada ────────────────────────────────────────────
 
 function LockedPredictionView({ prediction, match }: { prediction: Prediction | null; match: Match }) {
   if (!prediction) {
     return (
       <div
-        className="flex flex-col items-center justify-center py-14 gap-3 rounded-xl text-center"
+        className="flex flex-col items-center justify-center py-16 gap-4 rounded-2xl text-center"
         style={{
           background: 'oklch(0.09 0.007 255)',
-          border: '1px solid oklch(0.16 0.01 255)',
+          border: '2px dashed oklch(0.20 0.01 255)',
         }}
       >
-        <span className="text-3xl opacity-40">🔒</span>
-        <p className="text-sm" style={{ color: 'oklch(0.52 0.01 255)' }}>
-          No realizaste una predicción para este partido.
-        </p>
+        <span style={{ fontSize: 40, opacity: 0.25 }}>🔒</span>
+        <div className="space-y-1">
+          <p className="text-sm font-semibold" style={{ color: 'oklch(0.50 0.01 255)' }}>
+            Sin predicción registrada
+          </p>
+          <p className="text-xs" style={{ color: 'oklch(0.35 0.008 255)' }}>
+            No enviaste una predicción antes del inicio del partido.
+          </p>
+        </div>
       </div>
     )
   }
 
   const isFinished = match.status === 'finished'
+  const isLive = match.status === 'live'
+  const pts = prediction.points_earned ?? 0
+
+  // Determinar resultado relativo al marcador real
+  const resultTag = (() => {
+    if (!isFinished || match.home_score === null || match.away_score === null) return null
+    const exact = prediction.pred_home === match.home_score && prediction.pred_away === match.away_score
+    const correct =
+      (prediction.pred_home > prediction.pred_away && match.home_score > match.away_score) ||
+      (prediction.pred_home < prediction.pred_away && match.home_score < match.away_score) ||
+      (prediction.pred_home === prediction.pred_away && match.home_score === match.away_score)
+    if (exact) return 'exact'
+    if (correct) return 'result'
+    return 'miss'
+  })()
+
+  const accentColor = resultTag === 'exact'
+    ? 'oklch(0.72 0.22 145)'
+    : resultTag === 'result'
+    ? 'oklch(0.65 0.18 200)'
+    : isFinished
+    ? 'oklch(0.65 0.22 25)'
+    : 'oklch(0.72 0.22 145)'
 
   return (
     <div
-      className="rounded-xl overflow-hidden space-y-4 p-5"
+      className="rounded-2xl overflow-hidden"
       style={{
         background: 'oklch(0.09 0.007 255)',
-        border: '1px solid oklch(0.20 0.01 255)',
+        border: `1px solid ${accentColor}33`,
+        boxShadow: `0 0 30px ${accentColor}0d`,
       }}
     >
-      {/* Points earned */}
-      {isFinished && (
-        <div className="flex items-center justify-between">
-          <span className="text-xs uppercase tracking-widest" style={{ color: 'oklch(0.52 0.01 255)' }}>
-            Puntos obtenidos
-          </span>
+      {/* ── Banner de estado ── */}
+      <div
+        className="flex items-center justify-between px-4 py-2.5"
+        style={{
+          background: `${accentColor}12`,
+          borderBottom: `1px solid ${accentColor}22`,
+        }}
+      >
+        <div className="flex items-center gap-2">
           <span
-            className="text-2xl font-bold font-mono"
-            style={{ color: prediction.points_earned > 0 ? 'oklch(0.72 0.22 145)' : 'oklch(0.52 0.01 255)' }}
+            className="inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold"
+            style={{ background: `${accentColor}25`, color: accentColor }}
           >
-            {prediction.points_earned > 0 ? `+${prediction.points_earned}` : '0'}
+            {isLive ? '●' : '✓'}
+          </span>
+          <span className="text-xs font-bold uppercase tracking-widest" style={{ color: accentColor }}>
+            {isLive ? 'Predicción enviada · En curso' : isFinished ? 'Predicción cerrada' : 'Predicción enviada'}
           </span>
         </div>
-      )}
 
-      {/* Score */}
-      <div>
-        <p className="text-xs uppercase tracking-widest mb-2" style={{ color: 'oklch(0.40 0.008 255)' }}>
-          Resultado predicho
-        </p>
-        <div className="flex items-center gap-3">
-          <span className="text-sm flex-1 text-right" style={{ color: 'oklch(0.80 0.005 255)' }}>{match.home_team}</span>
-          <span
-            className="text-3xl font-bold font-mono px-4 py-2 rounded-xl"
-            style={{
-              background: 'oklch(0.13 0.01 255)',
-              color: 'oklch(0.93 0.005 255)',
-              border: '1px solid oklch(0.22 0.01 255)',
-            }}
-          >
-            {prediction.pred_home} – {prediction.pred_away}
-          </span>
-          <span className="text-sm flex-1" style={{ color: 'oklch(0.80 0.005 255)' }}>{match.away_team}</span>
-        </div>
-      </div>
-
-      {/* Scorers */}
-      {prediction.pred_scorers && prediction.pred_scorers.length > 0 && (
-        <div>
-          <p className="text-xs uppercase tracking-widest mb-2" style={{ color: 'oklch(0.40 0.008 255)' }}>
-            Goleadores predichos
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {prediction.pred_scorers.map(s => (
-              <span
-                key={s}
-                className="text-xs px-2 py-0.5 rounded-md"
-                style={{
-                  background: 'oklch(0.72 0.22 145 / 0.10)',
-                  color: 'oklch(0.72 0.22 145)',
-                  border: '1px solid oklch(0.72 0.22 145 / 0.2)',
-                }}
-              >
-                {s}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Red card + most fouls */}
-      <div className="flex gap-4 flex-wrap">
-        <div>
-          <p className="text-xs uppercase tracking-widest mb-1" style={{ color: 'oklch(0.40 0.008 255)' }}>Tarjeta roja</p>
-          <span className="text-sm" style={{ color: 'oklch(0.80 0.005 255)' }}>
-            {prediction.pred_red_card === null ? 'No sé' : prediction.pred_red_card ? 'Sí' : 'No'}
-          </span>
-        </div>
-        {prediction.pred_most_fouls && (
-          <div>
-            <p className="text-xs uppercase tracking-widest mb-1" style={{ color: 'oklch(0.40 0.008 255)' }}>Más faltas</p>
-            <span className="text-sm" style={{ color: 'oklch(0.80 0.005 255)' }}>{prediction.pred_most_fouls}</span>
+        {/* Puntos si terminó */}
+        {isFinished && (
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] uppercase tracking-wider" style={{ color: 'oklch(0.45 0.008 255)' }}>pts</span>
+            <span
+              className="text-xl font-bold font-mono leading-none"
+              style={{ color: pts > 0 ? accentColor : 'oklch(0.40 0.008 255)' }}
+            >
+              {pts > 0 ? `+${pts}` : '0'}
+            </span>
           </div>
         )}
+      </div>
+
+      {/* ── Marcador predicho ── */}
+      <div className="px-5 py-6">
+        <p
+          className="text-[9px] uppercase tracking-[0.2em] text-center mb-5 font-medium"
+          style={{ color: 'oklch(0.40 0.008 255)' }}
+        >
+          Tu resultado predicho
+        </p>
+
+        <div className="flex items-center justify-between gap-3">
+          {/* Local */}
+          <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
+            <span className="text-xs text-center font-medium leading-tight" style={{ color: 'oklch(0.60 0.005 255)' }}>
+              {match.home_team}
+            </span>
+          </div>
+
+          {/* Marcador */}
+          <div
+            className="flex items-center gap-0 shrink-0 rounded-xl overflow-hidden"
+            style={{
+              border: `1px solid ${accentColor}35`,
+              background: 'oklch(0.12 0.01 255)',
+            }}
+          >
+            <span
+              className="px-5 py-3 font-mono font-black leading-none"
+              style={{
+                fontSize: 36,
+                color: 'oklch(0.96 0.005 255)',
+                fontFamily: 'var(--font-bebas), Bebas Neue, monospace',
+                letterSpacing: '0.04em',
+                borderRight: `1px solid ${accentColor}20`,
+              }}
+            >
+              {prediction.pred_home}
+            </span>
+            <span
+              className="px-3 font-mono font-bold"
+              style={{ fontSize: 20, color: 'oklch(0.30 0.008 255)' }}
+            >
+              –
+            </span>
+            <span
+              className="px-5 py-3 font-mono font-black leading-none"
+              style={{
+                fontSize: 36,
+                color: 'oklch(0.96 0.005 255)',
+                fontFamily: 'var(--font-bebas), Bebas Neue, monospace',
+                letterSpacing: '0.04em',
+                borderLeft: `1px solid ${accentColor}20`,
+              }}
+            >
+              {prediction.pred_away}
+            </span>
+          </div>
+
+          {/* Visitante */}
+          <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
+            <span className="text-xs text-center font-medium leading-tight" style={{ color: 'oklch(0.60 0.005 255)' }}>
+              {match.away_team}
+            </span>
+          </div>
+        </div>
+
+        {/* Badge resultado si terminó */}
+        {resultTag && (
+          <div className="flex justify-center mt-4">
+            <span
+              className="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest"
+              style={{
+                background: `${accentColor}15`,
+                color: accentColor,
+                border: `1px solid ${accentColor}30`,
+              }}
+            >
+              {resultTag === 'exact' ? '✦ Marcador exacto' : resultTag === 'result' ? '✓ Resultado correcto' : '✗ Resultado fallado'}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* ── Separador de ticket ── */}
+      <div className="flex items-center gap-0 px-0 relative">
+        <div
+          className="w-4 h-4 rounded-full shrink-0"
+          style={{ background: 'oklch(0.07 0.006 255)', marginLeft: -8, border: '1px solid oklch(0.16 0.01 255)' }}
+        />
+        <div
+          className="flex-1"
+          style={{
+            borderTop: '1px dashed oklch(0.20 0.01 255)',
+          }}
+        />
+        <div
+          className="w-4 h-4 rounded-full shrink-0"
+          style={{ background: 'oklch(0.07 0.006 255)', marginRight: -8, border: '1px solid oklch(0.16 0.01 255)' }}
+        />
+      </div>
+
+      {/* ── Detalles adicionales ── */}
+      <div className="px-5 pt-4 pb-5 space-y-4">
+        {/* Goleadores */}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <span style={{ fontSize: 13 }}>⚽</span>
+            <span className="text-[10px] uppercase tracking-widest font-bold" style={{ color: 'oklch(0.45 0.008 255)' }}>
+              Goleadores
+            </span>
+          </div>
+          {prediction.pred_scorers && prediction.pred_scorers.length > 0 ? (
+            <div className="flex flex-wrap gap-1.5">
+              {prediction.pred_scorers.map(s => (
+                <span
+                  key={s}
+                  className="text-xs px-2.5 py-1 rounded-lg font-medium"
+                  style={{
+                    background: `${accentColor}12`,
+                    color: 'oklch(0.82 0.005 255)',
+                    border: `1px solid ${accentColor}25`,
+                  }}
+                >
+                  {s}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <span className="text-xs italic" style={{ color: 'oklch(0.35 0.008 255)' }}>No predichos</span>
+          )}
+        </div>
+
+        {/* Tarjeta roja + más faltas */}
+        <div className="grid grid-cols-2 gap-3">
+          <div
+            className="rounded-lg px-3 py-2.5"
+            style={{
+              background: prediction.pred_red_card === true
+                ? 'oklch(0.65 0.22 25 / 0.10)'
+                : 'oklch(0.11 0.008 255)',
+              border: prediction.pred_red_card === true
+                ? '1px solid oklch(0.65 0.22 25 / 0.30)'
+                : '1px solid oklch(0.18 0.01 255)',
+            }}
+          >
+            <p className="text-[9px] uppercase tracking-widest mb-1" style={{ color: 'oklch(0.40 0.008 255)' }}>
+              🟥 Tarjeta roja
+            </p>
+            <p
+              className="text-sm font-bold"
+              style={{
+                color: prediction.pred_red_card === true
+                  ? 'oklch(0.75 0.22 25)'
+                  : prediction.pred_red_card === false
+                  ? 'oklch(0.72 0.22 145)'
+                  : 'oklch(0.50 0.01 255)',
+              }}
+            >
+              {prediction.pred_red_card === null ? '¿?' : prediction.pred_red_card ? 'Sí habrá' : 'No habrá'}
+            </p>
+          </div>
+
+          <div
+            className="rounded-lg px-3 py-2.5"
+            style={{
+              background: prediction.pred_most_fouls ? 'oklch(0.65 0.18 200 / 0.08)' : 'oklch(0.11 0.008 255)',
+              border: prediction.pred_most_fouls ? '1px solid oklch(0.65 0.18 200 / 0.25)' : '1px solid oklch(0.18 0.01 255)',
+            }}
+          >
+            <p className="text-[9px] uppercase tracking-widest mb-1" style={{ color: 'oklch(0.40 0.008 255)' }}>
+              🦵 Más faltas
+            </p>
+            <p
+              className="text-sm font-bold truncate"
+              style={{ color: prediction.pred_most_fouls ? 'oklch(0.82 0.005 255)' : 'oklch(0.35 0.008 255)' }}
+            >
+              {prediction.pred_most_fouls ?? 'No predicho'}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )
