@@ -7,9 +7,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 export default function AdminPage() {
   const [syncing, setSyncing] = useState(false)
   const [result, setResult] = useState<string | null>(null)
-  const supabase = createClient()
 
   async function syncFixtures() {
+    const supabase = createClient()
     setSyncing(true)
     setResult(null)
     const { data: { user } } = await supabase.auth.getUser()
