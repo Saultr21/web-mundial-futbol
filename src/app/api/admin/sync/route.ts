@@ -12,8 +12,8 @@ interface FDMatch {
   status: string
   stage: string
   group: string | null
-  homeTeam: { name: string }
-  awayTeam: { name: string }
+  homeTeam: { name: string | null }
+  awayTeam: { name: string | null }
   score: { fullTime: { home: number | null; away: number | null } }
 }
 
@@ -51,10 +51,11 @@ export async function POST() {
     return NextResponse.json({ synced: 0, debug: { count: data.count } })
   }
 
+  // Partidos eliminatorios sin equipos determinados aún usan placeholder
   const records = matches.map(m => ({
     api_id: m.id,
-    home_team: m.homeTeam.name,
-    away_team: m.awayTeam.name,
+    home_team: m.homeTeam.name ?? 'Por determinar',
+    away_team: m.awayTeam.name ?? 'Por determinar',
     kickoff_at: m.utcDate,
     stage: mapStage(m.stage),
     group_name: m.group ? m.group.replace('GROUP_', '') : null,
