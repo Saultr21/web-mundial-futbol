@@ -7,3 +7,9 @@ pages_build_output_dir = ".vercel/output/static"
 binding = "MATCHES_CACHE"
 id = "36556db281e34b148ede9a4572aab45a"
 
+# Variables públicas (no-secretas) — seguras para commitear
+[vars]
+NEXT_PUBLIC_SUPABASE_URL = "https://xzkzygowjvkwqrgkaouz.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_ofZJ4dv3Yb1BrfU5a3LOPQ_Ha_H8A5L"
+ADMIN_EMAIL = "saul.trujillo@cognitiatech.com"
+
