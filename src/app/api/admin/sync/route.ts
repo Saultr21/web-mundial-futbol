@@ -1,10 +1,21 @@
+export const runtime = 'edge'
+
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 
-export const runtime = 'edge'
+const FD_API = 'https://api.football-data.org/v4'
 
-const FOOTBALL_API = 'https://v3.football.api-sports.io'
+interface FDMatch {
+  id: number
+  utcDate: string
+  status: string
+  stage: string
+  group: string | null
+  homeTeam: { name: string }
+  awayTeam: { name: string }
+  score: { fullTime: { home: number | null; away: number | null } }
+}
 
 export async function POST() {
   const headersList = await headers()
@@ -14,77 +25,61 @@ export async function POST() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const token = process.env.FOOTBALL_DATA_TOKEN
+  if (!token) {
+    return NextResponse.json({ error: 'FOOTBALL_DATA_TOKEN no configurada en Cloudflare Secrets' }, { status: 500 })
+  }
+
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
-  if (!process.env.FOOTBALL_API_KEY) {
-    return NextResponse.json({ error: 'FOOTBALL_API_KEY no configurada' }, { status: 500 })
-  }
-
-  const res = await fetch(`${FOOTBALL_API}/fixtures?league=1&season=2026`, {
-    headers: { 'x-apisports-key': process.env.FOOTBALL_API_KEY },
+  const res = await fetch(`${FD_API}/competitions/WC/matches`, {
+    headers: { 'X-Auth-Token': token },
   })
-  const data = await res.json() as {
-    errors?: Record<string, string>
-    results?: number
-    response: Array<{
-      fixture: { id: number; date: string; status: { short: string } }
-      teams: { home: { name: string }; away: { name: string } }
-      league: { round: string }
-      goals: { home: number | null; away: number | null }
-    }>
+
+  if (!res.ok) {
+    const body = await res.text()
+    return NextResponse.json({ error: `football-data.org error ${res.status}`, details: body }, { status: 502 })
   }
 
-  if (data.errors && Object.keys(data.errors).length > 0) {
-    return NextResponse.json({ error: 'API-Football error', details: data.errors }, { status: 502 })
+  const data = await res.json() as { count: number; matches: FDMatch[] }
+  const matches = data.matches ?? []
+
+  if (matches.length === 0) {
+    return NextResponse.json({ synced: 0, debug: { count: data.count } })
   }
 
-  const fixtures = data.response ?? []
-
-  // Diagnóstico: si 0 resultados, devolver info de la respuesta
-  if (fixtures.length === 0) {
-    return NextResponse.json({
-      synced: 0,
-      debug: { results: (data as Record<string, unknown>).results ?? 0, errors: data.errors ?? {} },
-    })
-  }
-
-  const records = fixtures.map((f: {
-    fixture: { id: number; date: string; status: { short: string } }
-    teams: { home: { name: string }; away: { name: string } }
-    league: { round: string }
-    goals: { home: number | null; away: number | null }
-  }) => ({
-    api_id: f.fixture.id,
-    home_team: f.teams.home.name,
-    away_team: f.teams.away.name,
-    kickoff_at: f.fixture.date,
-    stage: mapStage(f.league.round),
-    group_name: f.league.round.includes('Group') ? f.league.round.split(' ').pop() ?? null : null,
-    status: mapMatchStatus(f.fixture.status.short),
-    home_score: f.goals.home,
-    away_score: f.goals.away,
+  const records = matches.map(m => ({
+    api_id: m.id,
+    home_team: m.homeTeam.name,
+    away_team: m.awayTeam.name,
+    kickoff_at: m.utcDate,
+    stage: mapStage(m.stage),
+    group_name: m.group ? m.group.replace('GROUP_', '') : null,
+    status: mapStatus(m.status),
+    home_score: m.score.fullTime.home,
+    away_score: m.score.fullTime.away,
   }))
 
   const { error: upsertError } = await supabase.from('matches').upsert(records, { onConflict: 'api_id' })
   if (upsertError) return NextResponse.json({ error: upsertError.message }, { status: 500 })
 
-  return NextResponse.json({ synced: fixtures.length })
+  return NextResponse.json({ synced: records.length })
 }
 
-function mapStage(round: string): string {
-  if (round.includes('Group')) return 'group'
-  if (round === 'Round of 16') return 'r16'
-  if (round === 'Quarter-finals') return 'qf'
-  if (round === 'Semi-finals') return 'sf'
-  if (round === 'Final') return 'final'
+function mapStage(stage: string): string {
+  if (stage === 'GROUP_STAGE') return 'group'
+  if (stage === 'ROUND_OF_16' || stage === 'LAST_16') return 'r16'
+  if (stage === 'QUARTER_FINALS') return 'qf'
+  if (stage === 'SEMI_FINALS') return 'sf'
+  if (stage === 'FINAL' || stage === 'THIRD_PLACE') return 'final'
   return 'group'
 }
 
-function mapMatchStatus(short: string): string {
-  if (['1H', '2H', 'HT', 'ET', 'P', 'SUSP', 'INT'].includes(short)) return 'live'
-  if (['FT', 'AET', 'PEN'].includes(short)) return 'finished'
+function mapStatus(status: string): string {
+  if (['IN_PLAY', 'PAUSED'].includes(status)) return 'live'
+  if (status === 'FINISHED') return 'finished'
   return 'scheduled'
 }
