@@ -2,7 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 
-export const runtime = 'nodejs'
+export const runtime = 'edge'
 
 const FOOTBALL_API = 'https://v3.football.api-sports.io'
 

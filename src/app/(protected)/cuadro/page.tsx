@@ -1,3 +1,5 @@
+export const runtime = 'edge'
+
 import { createClient } from '@/lib/supabase/server'
 import { BracketForm } from '@/components/bracket/BracketForm'
 import { SpecialPredictionsForm } from '@/components/predictions/SpecialPredictionsForm'

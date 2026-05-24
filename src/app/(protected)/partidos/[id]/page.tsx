@@ -1,3 +1,5 @@
+export const runtime = 'edge'
+
 import { createClient } from '@/lib/supabase/server'
 import { MatchPredictionForm } from '@/components/predictions/MatchPredictionForm'
 import { notFound } from 'next/navigation'

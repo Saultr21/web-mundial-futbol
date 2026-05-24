@@ -1,3 +1,5 @@
+export const runtime = 'edge'
+
 import { createClient } from '@/lib/supabase/server'
 import { BadgeGrid } from '@/components/achievements/BadgeGrid'
 import type { BadgeKey } from '@/lib/types/app'

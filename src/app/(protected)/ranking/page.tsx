@@ -1,3 +1,5 @@
+export const runtime = 'edge'
+
 import { createClient } from '@/lib/supabase/server'
 import { LeaderboardTable } from '@/components/ranking/LeaderboardTable'
 import type { LeaderboardEntry } from '@/lib/types/app'
