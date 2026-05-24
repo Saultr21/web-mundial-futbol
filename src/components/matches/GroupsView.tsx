@@ -244,11 +244,11 @@ function GroupCard({
           </div>
         ) : (
           /* Teams list cuando no hay resultados aún */
-          <div className="px-3 pt-3 pb-2 grid grid-cols-2 gap-x-2 gap-y-2">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', padding: '12px 12px 8px' }}>
             {teams.map(team => (
-              <div key={team} className="flex items-center justify-center gap-1.5 min-w-0">
+              <div key={team} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, minWidth: 0 }}>
                 <TeamFlagSmall team={team} />
-                <span className="text-[11px] truncate font-medium" style={{ color: 'oklch(0.82 0.005 255)' }}>
+                <span className="text-[11px] font-medium" style={{ color: 'oklch(0.82 0.005 255)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 72 }}>
                   {team}
                 </span>
               </div>

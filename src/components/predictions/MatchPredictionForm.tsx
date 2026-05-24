@@ -1,5 +1,6 @@
 'use client'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Match, Prediction } from '@/lib/types/app'
 import { z } from 'zod'
@@ -525,9 +526,33 @@ export function MatchPredictionForm({ match, existing, userId, isLocked }: Props
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const router = useRouter()
 
-  if (isLocked) {
-    return <LockedPredictionView prediction={existing} match={match} />
+  // Mostrar ticket si ya hay predicción enviada (bloqueado = sin botón editar)
+  if (isLocked || (existing && !editing) || success) {
+    return (
+      <div>
+        <LockedPredictionView prediction={existing} match={match} />
+        {!isLocked && existing && (
+          <div className="px-4 pb-4 flex justify-center">
+            <button
+              onClick={() => setEditing(true)}
+              className="text-xs px-4 py-2 rounded-lg transition-all duration-150 cursor-pointer"
+              style={{
+                background: 'oklch(0.13 0.01 255)',
+                border: '1px solid oklch(0.22 0.01 255)',
+                color: 'oklch(0.60 0.01 255)',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'oklch(0.72 0.22 145 / 0.4)'; e.currentTarget.style.color = 'oklch(0.82 0.005 255)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'oklch(0.22 0.01 255)'; e.currentTarget.style.color = 'oklch(0.60 0.01 255)' }}
+            >
+              Editar predicción
+            </button>
+          </div>
+        )}
+      </div>
+    )
   }
 
   async function submit(e: React.FormEvent) {
@@ -560,7 +585,8 @@ export function MatchPredictionForm({ match, existing, userId, isLocked }: Props
       setError(dbError.message)
     } else {
       setSuccess(true)
-      setTimeout(() => setSuccess(false), 4000)
+      setEditing(false)
+      router.refresh()
     }
     setSaving(false)
   }
